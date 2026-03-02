@@ -1,4 +1,7 @@
 package com.github.laineros.taskmanager.service;
 
-public class TaskService {
+import org.springframework.stereotype.Component;
+
+@Component
+public interface TaskService {
 }
