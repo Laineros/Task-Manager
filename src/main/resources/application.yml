@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: TaskManager
+  profiles:
+    active: dev
+
+app:
+  name: TaskManager
+  max-tasks: 10
+  default-priority: MEDIUM
+
