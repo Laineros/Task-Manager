@@ -1,7 +1,7 @@
 package com.github.laineros.taskmanager.service;
 
-import org.springframework.stereotype.Component;
+import com.github.laineros.taskmanager.model.Task;
 
-@Component
 public interface TaskService {
+    Task createTask(Task task);
 }
