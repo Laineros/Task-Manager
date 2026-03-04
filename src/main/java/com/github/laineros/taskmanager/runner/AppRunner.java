@@ -11,12 +11,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 import java.util.List;
 
 @Component
+@Profile("cli")
 public class AppRunner implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(AppRunner.class);
@@ -39,12 +41,12 @@ public class AppRunner implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         // Шаг 1: Приветствие
-        System.out.println("\nШаг 1  Приветствие");
-        System.out.printf("Добро пожаловать в %s! Лимит: %d. Приоритет по умолчанию: %s%n",
+        log.info("\nШаг 1  Приветствие");
+        log.info("Добро пожаловать в {}! Лимит: {}. Приоритет по умолчанию: {}",
                 appProperties.getAppName(), appProperties.getMaxTasks(), appProperties.getDefaultPriority());
 
         // Шаг 2: Добавление задач
-        System.out.println("\nШаг 2  Добавление задач");
+        log.info("\nШаг 2  Добавление задач");
         Task task1 = new Task(null, "task1", "desc 1", Priority.LOW, Status.NEW);
         Task task2 = new Task(null, "task2", "desc 2", Priority.MEDIUM, Status.NEW);
         Task task3 = new Task(null, "task3", "desc 3", Priority.HIGH, Status.NEW);
@@ -53,13 +55,13 @@ public class AppRunner implements CommandLineRunner {
         taskService.createTask(task2);
         taskService.createTask(task3);
 
-        System.out.println("Созданные задачи:");
+        log.info("Созданные задачи:");
         taskRepository.findAll().forEach(t ->
-                System.out.printf("id=%d, title=%s, priority=%s, status=%s%n",
+                log.info("id={}, title={}, priority={}, status={}",
                         t.getId(), t.getTitle(), t.getPriority(), t.getStatus()));
 
         // Шаг 4: Изменение статусов
-        System.out.println("Шаг 4  Изменение статусов");
+        log.info("Шаг 4  Изменение статусов");
         List<Task> tasks = taskRepository.findAll();
         if (tasks.size() >= 2) {
             taskRepository.updateStatus(tasks.get(0).getId(), Status.IN_PROGRESS);
@@ -69,38 +71,38 @@ public class AppRunner implements CommandLineRunner {
         System.out.println("DONE задачи:");
         taskRepository.findAll().stream()
                 .filter(t -> t.getStatus() == Status.DONE)
-                .forEach(t -> System.out.printf("id=%d, title=%s%n", t.getId(), t.getTitle()));
+                .forEach(t -> log.info("id={}, title={}", t.getId(), t.getTitle()));
 
         System.out.println("HIGH задачи:");
         taskRepository.findByPriority(Priority.HIGH)
-                .forEach(t -> System.out.printf("id=%d, title=%s%n", t.getId(), t.getTitle()));
+                .forEach(t -> log.info("id={}, title={}", t.getId(), t.getTitle()));
 
         // Шаг 5: Prototype и ObjectProvider
-        System.out.println("\nШаг 5  Prototype и ObjectProvider");
+        log.info("\nШаг 5  Prototype и ObjectProvider");
         if (taskService instanceof TaskServiceImpl) {
             ((TaskServiceImpl) taskService).demonstratePrototype();
         }
 
         // Шаг 6: ApplicationContext
-        System.out.println("\nШаг 6  ApplicationContext");
+        log.info("\nШаг 6  ApplicationContext");
         TaskRepository manuallyGetRepo = applicationContext.getBean(TaskRepository.class);
-        System.out.println("Ручное получение бина: " + manuallyGetRepo.getClass().getSimpleName());
+        log.info("Ручное получение бина: {}", manuallyGetRepo.getClass().getSimpleName());
 
-        System.out.println("Всего бинов в контексте: " + applicationContext.getBeanDefinitionCount());
+        log.info("Всего бинов в контексте: {}", applicationContext.getBeanDefinitionCount());
 
-        System.out.println("Бины содержащие 'task' (без учета регистра):");
+        log.info("Бины содержащие 'task' (без учета регистра):");
         Arrays.stream(applicationContext.getBeanDefinitionNames())
                 .filter(name -> name.toLowerCase().contains("task"))
                 .forEach(System.out::println);
 
         // Шаг 3: Граничные случаи (после демонстрации остального)
-        System.out.println("\nШаг 3  Граничные случаи");
+        log.info("\nШаг 3  Граничные случаи");
         try {
             // Пустой title
             Task invalidTask = new Task(null, "", "Описание", Priority.LOW, Status.NEW);
             taskService.createTask(invalidTask);
         } catch (Exception e) {
-            System.out.println("Исключение при пустом title: " + e.getMessage());
+            log.warn("Исключение при пустом title: {}", e.getMessage());
         }
 
         try {
@@ -110,16 +112,16 @@ public class AppRunner implements CommandLineRunner {
                 taskService.createTask(extraTask);
             }
         } catch (Exception e) {
-            System.out.println("Исключение при превышении лимита: " + e.getMessage());
+            log.warn("Исключение при превышении лимита: {}", e.getMessage());
         }
 
         // Шаг 7: Информация о профиле
-        System.out.println("\nШаг 7  Переключение профиля");
+        log.info("\nШаг 7  Переключение профиля");
         String[] activeProfiles = applicationContext.getEnvironment().getActiveProfiles();
-        System.out.println("Активный профиль: " + (activeProfiles.length > 0 ? activeProfiles[0] : "default"));
+        log.info("Активный профиль: {}", activeProfiles.length > 0 ? activeProfiles[0] : "default");
 
         if (activeProfiles.length > 0 && "prod".equals(activeProfiles[0])) {
-            System.out.println("Задачи отсортированы по приоритету (уже показано в шаге 2)");
+            log.info("Задачи отсортированы по приоритету (уже показано в шаге 2)");
         }
     }
 }
